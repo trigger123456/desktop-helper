@@ -1,0 +1,25 @@
+{
+  "words": {
+    "apple": {
+      "word": "apple",
+      "status": "known",
+      "last_studied": "2026-07-14",
+      "updated_at": "2026-07-14 20:00:31",
+      "known_count": 2
+    },
+    "abandon": {
+      "word": "abandon",
+      "status": "known",
+      "last_studied": "2026-07-14",
+      "updated_at": "2026-07-14 20:00:32",
+      "known_count": 2
+    },
+    "focus": {
+      "word": "focus",
+      "status": "known",
+      "last_studied": "2026-07-14",
+      "updated_at": "2026-07-14 20:00:32",
+      "known_count": 5
+    }
+  }
+}

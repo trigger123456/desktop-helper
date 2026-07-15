@@ -1,0 +1,10 @@
+{
+  "daily_goal": 7,
+  "start_hidden": false,
+  "autostart": false,
+  "window_geometry": "1040x673+93+60",
+  "background_enabled": true,
+  "background_image": "assets/background.png",
+  "background_visible_mode": true,
+  "interface_opacity": 100
+}
