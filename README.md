@@ -1,5 +1,7 @@
 # Desktop Helper
 
+当前版本：`v2.0`
+
 一个适配 Windows 的轻量学习工具。它不是番茄钟，而是一个可以开机自启动、常驻托盘、随时展开的小型单词背诵和备忘录程序。
 
 ## 目标
@@ -28,6 +30,44 @@ pip install -r requirements.txt
 ```
 
 不安装依赖也能运行，只是关闭窗口时会最小化到任务栏，而不是隐藏到系统托盘。
+
+## Go 版界面
+
+项目已提供 Go 版 Windows 原生界面，入口在：
+
+```text
+cmd/desktop-helper/
+```
+
+Go 版界面继续复用现有文件：
+
+- `data/words.csv`
+- `data/progress.json`
+- `data/memo.txt`
+- `data/settings.json`
+- `assets/background.png`
+
+安装 Go 后，可以在项目根目录运行：
+
+```powershell
+go run ./cmd/desktop-helper
+```
+
+也可以构建成没有控制台窗口的桌面程序：
+
+```powershell
+go build -ldflags="-H=windowsgui" -o build/desktop-helper-go.exe ./cmd/desktop-helper
+```
+
+当前 Go 版已覆盖学习页、单词列表、手动添加、CSV 导入、备忘录、设置保存、背景路径管理、窗口背景铺底渲染、系统托盘隐藏/恢复，以及当前用户开机自启动。它使用 Go 标准库调用 Win32 原生控件，不引入 Web 后端、云服务或数据库。
+
+说明：Go 版背景绘制当前支持 Go 标准库可解码的 `png`、`jpg/jpeg`、`gif`。其他图片格式仍会复制和保存路径，但不会直接绘制到窗口背景。
+
+开发检查：
+
+```powershell
+go test ./...
+```
 
 ## 使用说明
 

@@ -6,3 +6,7 @@ venv/
 dist/
 build/
 *.spec
+*.exe
+*.test
+coverage.out
+.gocache/

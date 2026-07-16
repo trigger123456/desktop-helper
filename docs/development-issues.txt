@@ -1,0 +1,211 @@
+Desktop Helper Go UI 开发问题记录
+=================================
+
+记录时间：2026-07-16
+项目目录：E:\ptthon soft\desktop helper
+
+一、Go 安装与 PATH 问题
+----------------------
+
+1. 现象
+
+- 在 cmd 或 VS Code 终端中执行：
+
+  go --version
+
+  报错：
+
+  'go' 不是内部或外部命令，也不是可运行的程序或批处理文件。
+
+2. 原因
+
+- Go 已经安装，但 go.exe 所在目录没有被当前终端读取到。
+- Codex 之前可以执行 Go，是因为使用了完整路径：
+
+  C:\Users\lenovo\AppData\Local\Programs\Go\go1.26.5\go\bin\go.exe
+
+- 已经打开的 cmd、PowerShell、VS Code 终端不会自动刷新 PATH。
+
+3. 立即可用的临时解决方式
+
+在当前 cmd 中执行：
+
+  set PATH=%PATH%;C:\Users\lenovo\AppData\Local\Programs\Go\go1.26.5\go\bin
+  go version
+
+在当前 PowerShell 中执行：
+
+  $env:Path += ";C:\Users\lenovo\AppData\Local\Programs\Go\go1.26.5\go\bin"
+  go version
+
+4. 长期解决方式
+
+- 把下面路径加入当前用户 PATH：
+
+  C:\Users\lenovo\AppData\Local\Programs\Go\go1.26.5\go\bin
+
+- 然后完全关闭并重新打开 VS Code、cmd 或 PowerShell。
+
+5. 验证命令
+
+  go version
+
+期望输出类似：
+
+  go version go1.26.5 windows/amd64
+
+
+二、VS Code 中执行失败
+---------------------
+
+1. 现象
+
+- 系统环境变量已经修改，但 VS Code 终端仍然找不到 go。
+
+2. 原因
+
+- VS Code 在启动时读取环境变量。
+- 修改 PATH 后，已经打开的 VS Code 不会自动刷新。
+
+3. 解决方式
+
+- 完全退出 VS Code。
+- 重新打开 VS Code。
+- 打开新的终端。
+- 执行：
+
+  go version
+
+如果仍然失败，可以在 VS Code 终端中临时执行：
+
+  $env:Path += ";C:\Users\lenovo\AppData\Local\Programs\Go\go1.26.5\go\bin"
+  go run ./cmd/desktop-helper
+
+
+三、Go 版 UI 的运行方式
+----------------------
+
+1. 开发运行
+
+在项目根目录执行：
+
+  go run ./cmd/desktop-helper
+
+2. 直接运行已构建程序
+
+在项目根目录执行：
+
+  build\desktop-helper-go.exe
+
+3. 构建 Windows GUI 程序
+
+  go build -ldflags="-H=windowsgui" -o build\desktop-helper-go.exe ./cmd/desktop-helper
+
+说明：
+
+- build/ 目录已被 .gitignore 忽略。
+- 构建出的 exe 是本地运行产物，不需要提交到 Git。
+
+
+四、旧界面和新界面看起来没变化
+------------------------------
+
+1. 现象
+
+- 运行后看到的还是旧界面。
+
+2. 原因
+
+- 旧界面入口是：
+
+  python main.py
+
+- Go 新界面入口是：
+
+  go run ./cmd/desktop-helper
+
+  或：
+
+  build\desktop-helper-go.exe
+
+3. 解决方式
+
+- 不要用 python main.py 查看 Go 新 UI。
+- 直接运行 Go 入口或构建好的 exe。
+
+
+五、背景被文字块割裂
+--------------------
+
+1. 现象
+
+- 背景图片已经铺到窗口里，但标题、说明文字、统计文字附近出现一块块白底。
+- 看起来背景被割裂，不够连续。
+
+2. 原因
+
+- Win32 原生 STATIC、BUTTON、EDIT、LISTBOX 控件默认会自己刷背景。
+- Go 版使用 Win32 原生控件，不是网页 CSS，不能对所有控件直接套用真正 alpha 半透明。
+
+3. 已采用的处理方式
+
+- 对 STATIC 文本控件处理 WM_CTLCOLORSTATIC。
+- 对文字区域使用 TRANSPARENT 背景模式。
+- 返回 NULL_BRUSH，让主窗口背景图继续露出。
+- 对 EDIT、LISTBOX 这类需要可读性的控件使用浅色薄底。
+- 对 BUTTON 使用浅色薄底，避免原生按钮点击时反复重绘导致异常。
+
+4. 注意点
+
+- 输入框、列表、备忘录这类控件不建议完全透明，否则文字可读性会变差。
+- 当前折中方案是：文字透明 + 内容区域浅色薄底。
+
+
+六、点击退出按钮程序卡死
+----------------------
+
+1. 现象
+
+- 点击 Go 版窗口右上区域的“退出”按钮后，程序像是卡死。
+
+2. 可能原因
+
+- 退出流程和托盘图标销毁顺序不稳。
+- 原生按钮透明背景导致点击时触发复杂重绘。
+- 窗口销毁期间仍可能收到控件绘制或托盘回调消息。
+
+3. 已采用的修复方式
+
+- 退出时先设置 isQuitting。
+- 保存 memo 和 settings。
+- 如果托盘图标存在，先调用 Shell_NotifyIcon 删除托盘图标。
+- 隐藏窗口。
+- 再 DestroyWindow。
+- 最后兜底 PostQuitMessage。
+- 按钮背景改为浅色薄底，不再用透明按钮。
+
+
+七、验证命令
+------------
+
+Go 测试：
+
+  go test ./...
+
+Go 构建：
+
+  go build -ldflags="-H=windowsgui" -o build\desktop-helper-go.exe ./cmd/desktop-helper
+
+Python 旧入口语法检查：
+
+  python -m py_compile main.py
+
+
+八、开发原则
+------------
+
+- 保留 data/words.csv、data/progress.json、data/memo.txt、data/settings.json。
+- 保留 assets/background.png 和背景复制逻辑。
+- Go UI 只替换界面层，不引入登录、云同步、数据库或 Web 后端。
+- 用户数据仍默认留在项目目录内。
+- 构建产物、缓存、exe 不提交。
